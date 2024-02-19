@@ -47,7 +47,8 @@ public:
 		S2GB, // Short to ground phase B
 		OT, // Overtemperature (error)
 		OTHER_ERR, // GSTAT drv_err is set but none of the above conditions is found.
-		OTPW // Overtemperature pre warning
+		OTPW, // Overtemperature pre warning
+		STALLGUARD // Motor stall detected
 	};
 
 	struct PowerStageParameters {
@@ -215,6 +216,19 @@ public:
 	 * Get the current stall guard threshold.
 	 */
 	int getStallGuardThreshold();
+
+	/*
+	 * When the motor has stopped due to an stall guard event, this
+	 * method resets the necessary flags and enables motion again.
+	 */
+	void restartMotorAfterStallGuardStop();
+
+	/*
+	 * Test, whether motor stands still or not.
+	 * See Datasheet, p. 56, chapter 6.5.5, bit 31 = stst
+	 * @return true, if motor stands still, false otherwise.
+	 */
+	bool isMotorStandStill();
 
 
 protected:
