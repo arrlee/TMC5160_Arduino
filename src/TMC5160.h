@@ -66,6 +66,13 @@ public:
 		uint8_t pwmGradInitial = 0; // initial stealthChop velocity dependent gradient for PWM amplitude
 	};
 
+	struct ChopperConfiguration {
+		uint8_t hysteresisLow = 4; // "HEND", -3 to 12
+		uint8_t hysteresisStart = 0; // "HSTRT", 0 to 7, adds 1 to 8 to hysteresisLow/HEND
+		uint8_t offTime = 5; // "TOFF", Off time setting, 0: driver disabled, 1: only with TBL >= 2, 2 to 15
+		uint8_t comparatorBlankTime = 2; // "TBL", 0: 16tclk, 1: 24, 2: 36, 3: 54
+	};
+
 	TMC5160(uint32_t fclk = DEFAULT_F_CLK);
 	~TMC5160();
 
@@ -76,8 +83,18 @@ public:
 	 * motorParams : motor current parameters
 	 * stepperDirection : normal / inverted
 	 */
-
 	virtual bool begin(const PowerStageParameters &powerParams, const MotorParameters &motorParams, MotorDirection stepperDirection/*=NORMAL_MOTOR_DIRECTION*/);
+
+	/* Start the motor driver using the specified parameters.
+	 * These should be tuned according to the power stage and motor used.
+	 * Look in the examples for a config wizard.
+	 * powerParams : power stage parameters
+	 * motorParams : motor current parameters
+	 * stepperDirection : normal / inverted
+	 * chopperConfiguration
+	 */
+	virtual bool begin(const PowerStageParameters &powerParams, const MotorParameters &motorParams, MotorDirection stepperDirection/*=NORMAL_MOTOR_DIRECTION*/, ChopperConfiguration chopperConfig);
+
 	void end();
 
 	//TODO stealthChop tuning procedure
@@ -230,6 +247,13 @@ public:
 	 */
 	bool isMotorStandStill();
 
+	/*
+	 * Configure the PWM autoscaling
+	 * @param en_pwm_mode StealthChop voltage PWM enable flag (Switch from off to on state while in stand still, only.)
+	 * @param pwm_autoscale PWM automatic amplitude scaling
+	 * @param pwm_autograd PWM automatic gradient adaptation
+	 */
+	void setPWM(bool en_pwm_mode, bool pwm_autoscale, bool pwm_autograd);
 
 protected:
 	static constexpr uint8_t WRITE_ACCESS = 0x80;	//Register write access for spi / uart communication

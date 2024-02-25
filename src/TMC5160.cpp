@@ -36,8 +36,13 @@ TMC5160::~TMC5160()
 	;
 }
 
+bool TMC5160::begin(const PowerStageParameters &powerParams, const MotorParameters &motorParams, MotorDirection stepperDirection ) {
+	ChopperConfiguration cc;
+	this->begin(powerParams, motorParams, stepperDirection, cc);
+}
 
-bool TMC5160::begin(const PowerStageParameters &powerParams, const MotorParameters &motorParams, MotorDirection stepperDirection )
+
+bool TMC5160::begin(const PowerStageParameters &powerParams, const MotorParameters &motorParams, MotorDirection stepperDirection/*=NORMAL_MOTOR_DIRECTION*/, ChopperConfiguration chopperConfig)
 {
 	/* Clear the reset and charge pump undervoltage flags */
 	TMC5160_Reg::GSTAT_Register gstat = { 0 };
@@ -80,10 +85,10 @@ bool TMC5160::begin(const PowerStageParameters &powerParams, const MotorParamete
 	writeRegister(TMC5160_Reg::PWMCONF, pwmconf.value);
 
 	// Recommended settings in quick config guide
-	_chopConf.toff = 5;
-	_chopConf.tbl = 2;
-	_chopConf.hstrt_tfd = 4;
-	_chopConf.hend_offset = 0;
+	_chopConf.toff = constrain(chopperConfig.offTime, 0, 15);
+	_chopConf.tbl = constrain(chopperConfig.comparatorBlankTime, 0, 3);
+	_chopConf.hstrt_tfd = constrain(chopperConfig.hysteresisStart, 0, 7);
+	_chopConf.hend_offset = constrain(chopperConfig.hysteresisLow, -3, 12);
 	writeRegister(TMC5160_Reg::CHOPCONF, _chopConf.value);
 
 	// use position mode
@@ -483,7 +488,11 @@ void TMC5160::enableStallGuardStop(bool enable) {
 void TMC5160::setStallGuardThreshold(int threshold) {
 	TMC5160_Reg::COOLCONF_Register coolConf = {0};
 	coolConf.value = readRegister(TMC5160_Reg::COOLCONF);
-	coolConf.sgt    = constrain(threshold, -64, 63);
+	coolConf.sgt   = threshold & 0x7F;// constrain(threshold, -64, 63);
+
+	Serial.print("Coolconf=");
+	Serial.println(coolConf.value, HEX);
+
 	// coolConf.sgt    = constrain(threshold, 0, 127);
 	// Serial.println(coolConf.sgt);
 	writeRegister(TMC5160_Reg::COOLCONF, coolConf.value);
@@ -506,4 +515,17 @@ bool TMC5160::isMotorStandStill() {
 	TMC5160_Reg::DRV_STATUS_Register drvStatus = {0};
 	drvStatus.value = readRegister(TMC5160_Reg::DRV_STATUS);
 	return drvStatus.stst ? true : false;
+}
+
+void TMC5160::setPWM(bool en_pwm_mode, bool pwm_autoscale, bool pwm_autograd) {
+	TMC5160_Reg::GCONF_Register gconf = { 0 };
+	gconf.value = readRegister(TMC5160_Reg::GCONF);
+	gconf.en_pwm_mode = en_pwm_mode;
+	writeRegister(TMC5160_Reg::GCONF, gconf.value);
+
+	TMC5160_Reg::PWMCONF_Register pwmconf = { 0 };
+	pwmconf.value = readRegister(TMC5160_Reg::PWMCONF);
+	pwmconf.pwm_autoscale = pwm_autoscale;
+	pwmconf.pwm_autograd = pwm_autograd;
+	writeRegister(TMC5160_Reg::PWMCONF, pwmconf.value);	
 }
