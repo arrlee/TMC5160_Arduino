@@ -48,7 +48,9 @@ public:
 		OT, // Overtemperature (error)
 		OTHER_ERR, // GSTAT drv_err is set but none of the above conditions is found.
 		OTPW, // Overtemperature pre warning
-		STALLGUARD // Motor stall detected
+		STALLGUARD, // Motor stall detected,
+		OLA, // Open load indicator A
+		OLB, // Open load indicator B
 	};
 
 	struct PowerStageParameters {
@@ -254,6 +256,12 @@ public:
 	 * @param pwm_autograd PWM automatic gradient adaptation
 	 */
 	void setPWM(bool en_pwm_mode, bool pwm_autoscale, bool pwm_autograd);
+
+	/**
+	 * Set the motor turning direction.
+	 * @param md The direction.
+	 */
+	void setMotorDirection(MotorDirection md);
 
 protected:
 	static constexpr uint8_t WRITE_ACCESS = 0x80;	//Register write access for spi / uart communication

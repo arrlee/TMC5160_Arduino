@@ -529,3 +529,10 @@ void TMC5160::setPWM(bool en_pwm_mode, bool pwm_autoscale, bool pwm_autograd) {
 	pwmconf.pwm_autograd = pwm_autograd;
 	writeRegister(TMC5160_Reg::PWMCONF, pwmconf.value);	
 }
+
+void TMC5160::setMotorDirection(MotorDirection md) {
+	TMC5160_Reg::GCONF_Register gconf = { 0 };
+	gconf.value = readRegister(TMC5160_Reg::GCONF);
+	gconf.shaft = md;
+	writeRegister(TMC5160_Reg::GCONF, gconf.value);
+}
