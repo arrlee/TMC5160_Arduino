@@ -77,7 +77,8 @@ SOFTWARE.
 
 const uint8_t UART_TX_EN = 2;   // Differential transceiver TX enable pin
 const uint32_t UART_BAUDRATE = 500000; // UART baudrate : up to 750kbps with default TMC5160 clock
-const uint8_t SPI_CS = 5; // CS pin in SPI mode
+const uint8_t SPI_CS1 = 9; // CS pin in SPI mode
+const uint8_t SPI_CS2 = 10; // CS pin in SPI mode
 const uint8_t SPI_DRV_ENN = 8;  // DRV_ENN pin in SPI mode
 
 TMC5160* motor;
@@ -88,6 +89,7 @@ char readCommandToken(const char *tokens, int tokenCount, int defaultToken = -1)
 
   while (answer == 0)
   {
+
     //Flush input buffer
     while (Serial.available())
       Serial.read();
@@ -181,7 +183,12 @@ void setup()
   if (readCommandToken("su", 2, 1) == 's') 
   {
     SPI.begin();
-    motor = new TMC5160_SPI(SPI_CS);
+    motor = new TMC5160_SPI(SPI_CS1);
+
+    pinMode(SPI_CS2, OUTPUT);
+    digitalWrite(SPI_CS2, HIGH); // Active low
+
+
     pinMode(SPI_DRV_ENN, OUTPUT);
     digitalWrite(SPI_DRV_ENN, LOW); // Active low
 
